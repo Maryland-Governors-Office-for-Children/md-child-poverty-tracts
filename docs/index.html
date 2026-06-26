@@ -210,43 +210,13 @@ footer code{font-family:"IBM Plex Mono",monospace; background:var(--paper-2); pa
   </div>
 </header>
 
-<!-- ===== 1. THE QUESTION ===== -->
-<section id="question">
-  <div class="wrap narrow">
-    <p class="sec-no">01 — The question</p>
-    <h2>When a tract appears to "drop" 33 points</h2>
-    <p class="lead">It is common to see a tract that hovered near 40% child poverty for years suddenly read 10% — and to assume the data is broken. Census Tract&nbsp;6054.03 (the Wilde Lake community in Columbia) is a textbook case. How can a five-year estimate move that much in a single year?</p>
-    <p class="drop">It usually isn't an error — and it usually isn't really a 33-point drop. It's the margin of error doing exactly what margins of error do in small places. Every tract-level poverty figure published for Maryland is an <em>estimate</em> built from a survey sample, and at the tract level those samples are tiny. The single number on the map is just the middle of a range — and for tracts like this one, that range is enormous. Here is what the Census Bureau actually reported.</p>
-  </div>
-
-  <div class="wrap">
-    <div class="case" id="caseFig">
-      <h3>Census Tract 6054.03 — Wilde Lake, Howard County</h3>
-      <p class="sub">ACS 5-year child-poverty estimate ± margin of error (90% confidence)</p>
-      <div class="rb-key">
-        <span class="k"><span class="swdot"></span><b>Estimate</b> — the published rate</span>
-        <span class="k"><span class="swband"></span><b>Margin of error</b> — true rate is 90% likely to fall in this band</span>
-        <span class="k"><span class="swthr"></span><b>30% line</b> — ENOUGH eligibility threshold</span>
-      </div>
-      <!-- range rows injected by JS -->
-      <div id="caseRows"></div>
-      <div class="scale"><div></div><div class="ticks" id="caseTicks"></div></div>
-      <div class="takeaway" id="caseTake"></div>
-    </div>
-  </div>
-
-  <div class="wrap narrow">
-    <p>Notice that the 2022 range (roughly <b>19%–68%</b>) and the 2023 range (<b>0%–23%</b>) almost touch. Statistically, the "drop" is barely distinguishable from no change at all — both years are consistent with the true rate sitting somewhere around 20%. The point estimate jumped because the survey happened to catch different households; the underlying neighborhood did not transform overnight.</p>
-    <p style="font-size:15.5px"><b>About the green line.</b> Throughout this page, the <span style="color:var(--accent);font-weight:600">30% line</span> marks Maryland's <b>ENOUGH eligibility threshold</b> — a tract must reach roughly 30% child poverty to qualify. That's why margins of error matter so much here: when a tract's <em>range</em> straddles 30% (as Wilde Lake's 2022 range did), a single noisy estimate can flip it on or off the map even though nothing real changed.</p>
-  </div>
-</section>
-
-<!-- ===== 2. THE MAP ===== -->
+<!-- ===== THE MAP ===== -->
 <section id="map-sec">
   <div class="wrap">
-    <p class="sec-no">02 — Every tract, every year</p>
-    <h2>The map most people see</h2>
-    <p class="lead">Toggle the year and what you're measuring. The same tracts look very different depending on whether you map the estimate, its margin of error, or the change between years — which is the whole point.</p>
+    <p class="sec-no">01 — Every tract, every year</p>
+    <h2>Every Maryland tract, by year and measure</h2>
+    <p class="lead">Every tract-level child poverty figure is an <em>estimate</em> from a survey sample — and at the tract level those samples are small, so each estimate carries a margin of error. Toggle the year and what you're measuring: the same tracts look very different depending on whether you map the estimate, its margin of error, or the change between years.</p>
+    <p style="font-size:15.5px; max-width:64ch"><b>About the green line.</b> Throughout this page, the <span style="color:var(--accent);font-weight:600">30% line</span> marks Maryland's <b>ENOUGH eligibility threshold</b> — a tract must reach roughly 30% child poverty to qualify. That's why margins of error matter here: when a tract's <em>range</em> straddles 30%, a single noisy estimate can flip it on or off the map even though nothing real has changed.</p>
 
     <div class="toolbar">
       <div class="ctl">
@@ -285,7 +255,7 @@ footer code{font-family:"IBM Plex Mono",monospace; background:var(--paper-2); pa
 <!-- ===== 3. DISTRIBUTIONS ===== -->
 <section id="dist">
   <div class="wrap">
-    <p class="sec-no">03 — The shape of the data</p>
+    <p class="sec-no">02 — The shape of the data</p>
     <h2>Why the margin matters statewide</h2>
     <p class="lead">Across all ~1,450 Maryland tracts with data, the typical margin of error is about as large as the typical poverty rate itself. The distributions barely move from year to year — but individual tracts bounce around inside them.</p>
     <div class="charts">
@@ -300,7 +270,7 @@ footer code{font-family:"IBM Plex Mono",monospace; background:var(--paper-2); pa
 <!-- ===== 4. SEARCH ===== -->
 <section id="explore">
   <div class="wrap">
-    <p class="sec-no">04 — Look up any tract</p>
+    <p class="sec-no">03 — Look up any tract</p>
     <h2>Find your community</h2>
     <p class="lead">Search by tract number, GEOID, or place name. You'll get the three-year estimate, the margin of error around each one, and a plain-language read of whether any change is real. The page URL updates so you can share a specific tract.</p>
 
@@ -316,7 +286,7 @@ footer code{font-family:"IBM Plex Mono",monospace; background:var(--paper-2); pa
 <!-- ===== 5. METHODOLOGY ===== -->
 <section id="method">
   <div class="wrap narrow">
-    <p class="sec-no">05 — How the number is made</p>
+    <p class="sec-no">04 — How the number is made</p>
     <h2>How Maryland measures tract child poverty</h2>
 
     <ol class="steps">
@@ -400,16 +370,6 @@ function ticksHTML(){
 }
 
 // ---------- case study ----------
-function renderCase(){
-  const rec=TRACTS["24027605403"];
-  document.getElementById("caseRows").innerHTML=rangeRows(rec,true);
-  document.getElementById("caseTicks").innerHTML=ticksHTML();
-  const a=rec.years["2022"], b=rec.years["2023"];
-  document.getElementById("caseTake").innerHTML=
-    `In <b>2022</b> the estimate was <b>${a.est}% (±${a.moe})</b> — a true-rate range of about <b>${(a.est-a.moe).toFixed(0)}%–${(a.est+a.moe).toFixed(0)}%</b>. `+
-    `In <b>2023</b> it was <b>${b.est}% (±${b.moe})</b>. Those two ranges overlap, so the 33-point "drop" in the headline number is, statistically, not a reliable change at all — it's the margin of error, not the neighborhood, moving.`;
-}
-
 // ---------- map ----------
 const RAMPS={
   est:{title:"Child poverty rate", unit:"%", stops:[[0,'#f3ecdc'],[10,'#f0d9a8'],[20,'#e9b06a'],[30,'#d97b3f'],[45,'#b3402a'],[100,'#7d1f17']],
@@ -653,7 +613,6 @@ function wireSeg(id,attr,cb){
   });
 }
 function init(){
-  renderCase();
   buildMap(); renderLegend();
   renderDist(); renderStatline();
   buildIndex();
@@ -682,7 +641,7 @@ Promise.all([
   fetch('data/geometry.json').then(r=>r.json()),
   fetch('data/stats.json').then(r=>r.json())
 ]).then(([t,g,s])=>{TRACTS=t;GEOM=g;STATS=s; init();})
- .catch(e=>{document.getElementById('caseRows').innerHTML='<p style="color:#e8c9a0">Data failed to load: '+e+'</p>';});
+ .catch(e=>{document.getElementById('legRows').innerHTML='<p style="color:var(--est)">Data failed to load: '+e+'</p>';});
 </script>
 </body>
 </html>
