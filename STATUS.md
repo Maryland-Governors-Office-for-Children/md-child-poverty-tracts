@@ -13,11 +13,14 @@ See `CLAUDE.md` for context and `README.md` for build/run steps.
   narrative answering the Eisenreich thread.
 - Playwright-tested: 1,463 map polygons, toggles, search, deep-link, no console errors.
 
+## Live
+- **Site:** https://maryland-governors-office-for-children.github.io/md-child-poverty-tracts/
+- Repo `Maryland-Governors-Office-for-Children/md-child-poverty-tracts` — **public**
+  (Pages is not available for private repos on this org's plan; data is public/aggregate
+  ACS with no PII, so public is safe). Pages serves `/docs` from `main`.
+
 ## Open (needs Nick / external)
-- [ ] **Create GitHub repo + enable Pages** — outward-facing; confirm repo name and
-  visibility (private vs public) before first push. Suggested slug:
-  `md-child-poverty-tracts` in the GOC org.
-- [ ] Decide whether to **reply to Kim** with the live link once deployed (the site is
+- [ ] Decide whether to **reply to Kim** with the live link (the site is
   written to be that reply), and whether to loop in Christina/Ojeda.
 - [ ] Optional: confirm the displayed year labels (2022/2023/2024) are how leadership
   wants the ACS vintages named publicly.
