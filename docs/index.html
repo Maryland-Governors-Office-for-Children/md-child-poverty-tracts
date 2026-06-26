@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reading the Margin · Maryland Census-Tract Child Poverty</title>
+<meta name="description" content="How Maryland measures child poverty at the census-tract level — estimates, margins of error, and why a single tract's rate can swing wildly year to year.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+<style>
+:root{
+  --ink:#1a1714; --ink-soft:#4a443d; --paper:#f6f1e7; --paper-2:#efe7d7;
+  --line:#d8cdb8; --line-strong:#c2b394;
+  --est:#b3402a;          /* point estimate — terracotta */
+  --band:#e8c9a0;         /* margin-of-error band */
+  --band-edge:#cf9f63;
+  --accent:#1f5c4d;       /* deep green accent */
+  --neg:#2f6f8f; --pos:#b3402a;
+  --shadow:0 1px 0 rgba(26,23,20,.04), 0 8px 32px -12px rgba(26,23,20,.18);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans",sans-serif; font-size:17px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(circle at 1px 1px, rgba(26,23,20,.045) 1px, transparent 0);
+  background-size:26px 26px;
+}
+.mono{font-family:"IBM Plex Mono",monospace}
+h1,h2,h3{font-family:"Fraunces",serif; font-weight:600; line-height:1.08; letter-spacing:-.01em; color:var(--ink)}
+a{color:var(--accent); text-underline-offset:3px; text-decoration-thickness:1px}
+.wrap{max-width:1080px; margin:0 auto; padding:0 28px}
+.narrow{max-width:720px}
+
+/* ---- masthead ---- */
+header.mast{border-bottom:1.5px solid var(--ink); background:linear-gradient(180deg,var(--paper-2),var(--paper))}
+.mast .wrap{padding-top:30px; padding-bottom:34px}
+.kicker{font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); margin:0 0 18px}
+h1{font-size:clamp(38px,6.4vw,76px); margin:0 0 .35em; max-width:14ch}
+.dek{font-size:clamp(18px,2.2vw,22px); line-height:1.5; max-width:60ch; color:var(--ink-soft); font-family:"Fraunces",serif; font-weight:400; font-style:italic}
+.byline{margin-top:22px; font-size:13.5px; color:var(--ink-soft); display:flex; gap:18px; flex-wrap:wrap; align-items:center; font-family:"IBM Plex Mono",monospace}
+.byline .tag{background:var(--ink); color:var(--paper); padding:3px 9px; border-radius:2px; letter-spacing:.04em}
+
+/* ---- section scaffolding ---- */
+section{padding:64px 0; border-bottom:1px solid var(--line)}
+.sec-no{font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.2em; color:var(--accent); text-transform:uppercase; margin:0 0 10px}
+h2{font-size:clamp(28px,4vw,44px); margin:0 0 .5em}
+.lead{font-size:19px; color:var(--ink-soft); max-width:64ch}
+p{max-width:66ch}
+.drop::first-letter{font-family:"Fraunces",serif; font-weight:600; font-size:3.4em; float:left; line-height:.74; padding:8px 10px 0 0; color:var(--est)}
+
+/* ---- the hero case-study figure ---- */
+.case{background:var(--ink); color:var(--paper); border-radius:6px; padding:34px 34px 40px; box-shadow:var(--shadow); margin:32px 0}
+.case h3{color:var(--paper); font-size:24px; margin:0 0 4px}
+.case .sub{color:#cdbfa6; font-size:13.5px; font-family:"IBM Plex Mono",monospace; margin:0 0 26px}
+.rangerow{display:grid; grid-template-columns:64px 1fr; gap:18px; align-items:center; margin:0 0 6px}
+.rangerow .yr{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:15px; color:var(--paper)}
+.rangerow .yr small{display:block; color:#9f9683; font-weight:400; font-size:11px}
+.track{position:relative; height:46px}
+.axis{position:absolute; inset:0; border-left:1px solid #4a443d}
+.g1{position:absolute; top:0; bottom:0; width:1px; background:repeating-linear-gradient(transparent,transparent 4px,#3a352e 4px,#3a352e 8px)}
+.thr{position:absolute; top:-6px; bottom:-6px; width:2px; background:var(--accent)}
+.rangerow:first-child .thr::after{content:"30% threshold"; position:absolute; top:-20px; left:6px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:#7fae9f; white-space:nowrap; letter-spacing:.04em}
+.bd-light .rangerow:first-child .thr::after{color:var(--accent)}
+.band-bar{position:absolute; top:50%; transform:translateY(-50%); height:18px; background:linear-gradient(90deg,rgba(232,201,160,.25),rgba(232,201,160,.5)); border:1px solid var(--band-edge); border-radius:3px}
+.band-bar .cap{position:absolute; top:-19px; font-family:"IBM Plex Mono",monospace; font-size:10px; color:#cdbfa6; white-space:nowrap}
+.band-bar .cap.lo{left:0; transform:translateX(-50%)}
+.band-bar .cap.hi{right:0; transform:translateX(50%)}
+.pt{position:absolute; top:50%; width:13px; height:13px; border-radius:50%; background:var(--est); transform:translate(-50%,-50%); box-shadow:0 0 0 3px var(--ink), 0 0 0 4px var(--est)}
+.pt .lab{position:absolute; bottom:16px; left:50%; transform:translateX(-50%); font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:13px; color:var(--paper); white-space:nowrap}
+.scale{display:grid; grid-template-columns:64px 1fr; gap:18px; margin-top:8px}
+.scale .ticks{position:relative; height:16px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:#9f9683}
+.scale .ticks span{position:absolute; transform:translateX(-50%)}
+.takeaway{margin-top:26px; padding:18px 20px; border-left:3px solid var(--band-edge); background:rgba(232,201,160,.08); font-size:15.5px; line-height:1.6; border-radius:0 4px 4px 0}
+.takeaway b{color:var(--band)}
+
+/* ---- controls / toolbar ---- */
+.toolbar{display:flex; gap:26px; flex-wrap:wrap; align-items:flex-end; margin:8px 0 22px}
+.ctl label{display:block; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:7px}
+.seg{display:inline-flex; border:1.5px solid var(--ink); border-radius:4px; overflow:hidden; background:var(--paper)}
+.seg button{font-family:"IBM Plex Mono",monospace; font-size:13.5px; font-weight:500; border:0; background:transparent; color:var(--ink); padding:8px 15px; cursor:pointer; border-right:1px solid var(--line); transition:.12s}
+.seg button:last-child{border-right:0}
+.seg button:hover{background:var(--paper-2)}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--paper)}
+
+/* ---- map ---- */
+#map{height:560px; border:1.5px solid var(--ink); border-radius:6px; box-shadow:var(--shadow); background:#e9e2d3}
+.maprow{display:grid; grid-template-columns:1fr 280px; gap:22px; align-items:start}
+.legend{background:var(--paper); border:1.5px solid var(--ink); border-radius:6px; padding:18px; box-shadow:var(--shadow)}
+.legend h4{margin:0 0 12px; font-family:"Fraunces",serif; font-size:18px}
+.legend .row{display:flex; align-items:center; gap:10px; margin:5px 0; font-size:13.5px}
+.legend .sw{width:22px; height:14px; border-radius:2px; border:1px solid rgba(0,0,0,.15); flex:none}
+.legend .note{font-size:12.5px; color:var(--ink-soft); margin-top:12px; line-height:1.5}
+.leaflet-popup-content-wrapper{border-radius:6px; font-family:"IBM Plex Sans",sans-serif}
+.leaflet-popup-content{margin:14px 16px; font-size:13.5px; line-height:1.5}
+.pop-name{font-family:"Fraunces",serif; font-weight:600; font-size:16px}
+.pop-geo{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:#777}
+.pop-val{font-family:"IBM Plex Mono",monospace; font-weight:600}
+
+/* ---- distributions ---- */
+.charts{display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px}
+.chart{background:var(--paper); border:1.5px solid var(--ink); border-radius:6px; padding:6px 6px 0; box-shadow:var(--shadow)}
+.chart .cap{font-family:"IBM Plex Mono",monospace; font-size:12px; padding:10px 12px 0; color:var(--ink-soft)}
+.chart .cap b{color:var(--ink); font-size:13px}
+
+/* ---- search ---- */
+.search-box{position:relative; max-width:560px}
+.search-box input{width:100%; font-family:"IBM Plex Sans",sans-serif; font-size:18px; padding:15px 18px; border:1.5px solid var(--ink); border-radius:6px; background:var(--paper); color:var(--ink); box-shadow:var(--shadow)}
+.search-box input:focus{outline:2px solid var(--accent); outline-offset:1px}
+.suggest{position:absolute; left:0; right:0; top:calc(100% + 6px); background:var(--paper); border:1.5px solid var(--ink); border-radius:6px; box-shadow:var(--shadow); z-index:40; max-height:340px; overflow:auto; display:none}
+.suggest.open{display:block}
+.suggest .item{padding:11px 16px; cursor:pointer; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:12px; align-items:baseline}
+.suggest .item:last-child{border-bottom:0}
+.suggest .item:hover,.suggest .item.active{background:var(--paper-2)}
+.suggest .item .nm{font-weight:500}
+.suggest .item .dsc{font-size:12.5px; color:var(--ink-soft)}
+.suggest .item .gid{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:#998}
+
+/* ---- tract breakdown card ---- */
+#breakdown{margin-top:30px}
+.bd{background:var(--paper); border:1.5px solid var(--ink); border-radius:6px; box-shadow:var(--shadow); overflow:hidden}
+.bd .hd{padding:26px 30px; border-bottom:1.5px solid var(--ink); background:var(--paper-2); display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap}
+.bd .hd h3{font-size:27px; margin:0 0 4px}
+.bd .hd .meta{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--ink-soft)}
+.bd .hd .desc{font-style:italic; font-family:"Fraunces",serif; color:var(--ink-soft); margin-top:8px; max-width:48ch}
+.bd .share{font-family:"IBM Plex Mono",monospace; font-size:12px; border:1.5px solid var(--ink); background:var(--paper); padding:8px 13px; border-radius:4px; cursor:pointer; white-space:nowrap}
+.bd .share:hover{background:var(--ink); color:var(--paper)}
+.bd .body{padding:18px 30px 30px}
+.bd-light .axis{border-left:1px solid var(--line-strong)}
+.bd-light .g1{background:repeating-linear-gradient(transparent,transparent 4px,#e3d8c2 4px,#e3d8c2 8px)}
+.bd-light .rangerow .yr{color:var(--ink)} .bd-light .rangerow .yr small{color:var(--ink-soft)}
+.bd-light .band-bar{background:linear-gradient(90deg,rgba(207,159,99,.18),rgba(207,159,99,.34)); border-color:var(--band-edge)}
+.bd-light .band-bar .cap{color:var(--ink-soft)}
+.bd-light .pt{box-shadow:0 0 0 3px var(--paper),0 0 0 4px var(--est)}
+.bd-light .pt .lab{color:var(--ink)}
+.bd-light .scale .ticks{color:var(--ink-soft)}
+.bd-light .thr::after{color:var(--accent)}
+.bd .summary{display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin:24px 0 4px; border:1px solid var(--line); border-radius:5px; overflow:hidden}
+.bd .summary .cell{padding:16px 18px; border-right:1px solid var(--line)}
+.bd .summary .cell:last-child{border-right:0}
+.bd .summary .k{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft)}
+.bd .summary .v{font-family:"Fraunces",serif; font-size:30px; font-weight:600; margin-top:3px}
+.bd .summary .v small{font-size:15px; font-weight:500; color:var(--ink-soft); font-family:"IBM Plex Sans",sans-serif}
+.bd .interp{padding:20px 30px 28px; border-top:1px solid var(--line); font-size:15.5px; line-height:1.6; background:rgba(31,92,77,.04)}
+.bd .interp b{color:var(--accent)}
+.empty{color:var(--ink-soft); font-style:italic; font-family:"Fraunces",serif; padding:8px 0}
+
+/* ---- methodology ---- */
+.qa{border-left:3px solid var(--accent); padding:4px 0 4px 22px; margin:26px 0}
+.qa .q{font-family:"Fraunces",serif; font-weight:600; font-size:21px; margin:0 0 8px}
+.steps{counter-reset:s; list-style:none; padding:0; margin:24px 0}
+.steps li{counter-increment:s; position:relative; padding:0 0 22px 56px; max-width:64ch}
+.steps li::before{content:counter(s); position:absolute; left:0; top:-4px; width:38px; height:38px; border-radius:50%; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-family:"Fraunces",serif; font-weight:600; font-size:18px}
+.steps li b{font-family:"IBM Plex Sans",sans-serif}
+
+footer{padding:48px 0 70px; font-size:13.5px; color:var(--ink-soft)}
+footer .wrap{max-width:720px}
+footer code{font-family:"IBM Plex Mono",monospace; background:var(--paper-2); padding:1px 6px; border-radius:3px}
+
+.statline{display:flex; gap:34px; flex-wrap:wrap; margin:30px 0 0; padding-top:26px; border-top:1px solid var(--line)}
+.statline .s .n{font-family:"Fraunces",serif; font-size:42px; font-weight:600; line-height:1; color:var(--est)}
+.statline .s .l{font-size:13.5px; color:var(--ink-soft); margin-top:6px; max-width:24ch}
+
+@media(max-width:880px){
+  .maprow{grid-template-columns:1fr} .charts{grid-template-columns:1fr}
+  .bd .summary{grid-template-columns:1fr; } .bd .summary .cell{border-right:0; border-bottom:1px solid var(--line)}
+}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap">
+    <p class="kicker">Maryland Governor's Office for Children · Data &amp; Information</p>
+    <h1>Reading the Margin</h1>
+    <p class="dek">How Maryland measures child poverty one census tract at a time — and why a single tract's rate can lurch from 43% to 10% in a year without anyone's life actually changing.</p>
+    <div class="byline">
+      <span class="tag">Explainer</span>
+      <span>American Community Survey · 5-Year Estimates</span>
+      <span>2022 · 2023 · 2024</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===== 1. THE QUESTION ===== -->
+<section id="question">
+  <div class="wrap narrow">
+    <p class="sec-no">01 — The question</p>
+    <h2>A tract that "dropped" 33 points</h2>
+    <p class="lead">A Howard County colleague flagged what looked like an obvious error: Census Tract&nbsp;6054.03 in the Wilde Lake community had hovered near 40% child poverty for years, then suddenly read 10%. How can five-year data move that much in one year?</p>
+    <p class="drop">It isn't an error — and it isn't really a 33-point drop. It's the margin of error doing exactly what margins of error do in small places. Every tract-level poverty figure Maryland publishes is an <em>estimate</em> built from a survey sample, and at the tract level those samples are tiny. The single number on the map is just the middle of a range — and for Wilde Lake, that range was enormous. Here is what the Census Bureau actually reported.</p>
+  </div>
+
+  <div class="wrap">
+    <div class="case" id="caseFig">
+      <h3>Census Tract 6054.03 — Wilde Lake, Howard County</h3>
+      <p class="sub">ACS 5-year child-poverty estimate ± margin of error (90% confidence)</p>
+      <!-- range rows injected by JS -->
+      <div id="caseRows"></div>
+      <div class="scale"><div></div><div class="ticks" id="caseTicks"></div></div>
+      <div class="takeaway" id="caseTake"></div>
+    </div>
+  </div>
+
+  <div class="wrap narrow">
+    <p>Notice that the 2022 range (roughly <b>19%–68%</b>) and the 2023 range (<b>0%–23%</b>) almost touch. Statistically, the "drop" is barely distinguishable from no change at all — both years are consistent with the true rate sitting somewhere around 20%. The point estimate jumped because the survey happened to catch different households; the underlying neighborhood did not transform overnight.</p>
+  </div>
+</section>
+
+<!-- ===== 2. THE MAP ===== -->
+<section id="map-sec">
+  <div class="wrap">
+    <p class="sec-no">02 — Every tract, every year</p>
+    <h2>The map most people see</h2>
+    <p class="lead">Toggle the year and what you're measuring. The same tracts look very different depending on whether you map the estimate, its margin of error, or the change between years — which is the whole point.</p>
+
+    <div class="toolbar">
+      <div class="ctl">
+        <label>ACS 5-year vintage</label>
+        <div class="seg" id="yearSeg">
+          <button data-year="2022" aria-pressed="false">2022</button>
+          <button data-year="2023" aria-pressed="false">2023</button>
+          <button data-year="2024" aria-pressed="true">2024</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label>Measure</label>
+        <div class="seg" id="metricSeg">
+          <button data-metric="est" aria-pressed="true">Poverty rate</button>
+          <button data-metric="moe" aria-pressed="false">Margin of error</button>
+          <button data-metric="chg" aria-pressed="false">Year-over-year change</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="maprow">
+      <div id="map"></div>
+      <div class="legend">
+        <h4 id="legTitle">Child poverty rate</h4>
+        <div id="legRows"></div>
+        <p class="note" id="legNote"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 3. DISTRIBUTIONS ===== -->
+<section id="dist">
+  <div class="wrap">
+    <p class="sec-no">03 — The shape of the data</p>
+    <h2>Why the margin matters statewide</h2>
+    <p class="lead">Across all ~1,450 Maryland tracts with data, the typical margin of error is about as large as the typical poverty rate itself. The distributions barely move from year to year — but individual tracts bounce around inside them.</p>
+    <div class="charts">
+      <div class="chart"><div class="cap"><b>Child poverty rate</b><br>distribution across tracts</div><div id="distRate" style="height:280px"></div></div>
+      <div class="chart"><div class="cap"><b>Margin of error</b><br>distribution across tracts</div><div id="distMoe" style="height:280px"></div></div>
+      <div class="chart"><div class="cap"><b>Year-over-year change</b><br>in the point estimate</div><div id="distChg" style="height:280px"></div></div>
+    </div>
+    <div class="statline" id="statline"></div>
+  </div>
+</section>
+
+<!-- ===== 4. SEARCH ===== -->
+<section id="explore">
+  <div class="wrap">
+    <p class="sec-no">04 — Look up any tract</p>
+    <h2>Find your community</h2>
+    <p class="lead">Search by tract number, GEOID, or place name. You'll get the three-year estimate, the margin of error around each one, and a plain-language read of whether any change is real. The page URL updates so you can share a specific tract.</p>
+
+    <div class="search-box">
+      <input id="search" type="text" autocomplete="off" placeholder="e.g. 6054.03, Wilde Lake, or 24027605403" aria-label="Search census tracts">
+      <div class="suggest" id="suggest"></div>
+    </div>
+
+    <div id="breakdown"></div>
+  </div>
+</section>
+
+<!-- ===== 5. METHODOLOGY ===== -->
+<section id="method">
+  <div class="wrap narrow">
+    <p class="sec-no">05 — How the number is made</p>
+    <h2>How Maryland measures tract child poverty</h2>
+
+    <ol class="steps">
+      <li><b>The source is the Census Bureau, not the state.</b> Every figure comes from the American Community Survey (ACS) 5-Year Estimates. Maryland does not calculate or adjust these rates — we publish the Bureau's number for every tract, consistently, statewide.</li>
+      <li><b>"5-year" means pooled, not current.</b> The 2024 estimate blends survey responses collected over 2020–2024. Pooling five years is the only way to get a sample large enough to report at the tract level — but it means the figure is a rolling average, not a snapshot of this year.</li>
+      <li><b>Small places, small samples.</b> A single tract may have only a few dozen sampled households with children. Each year the five-year window drops its oldest year and adds a new one, so which households land in the sample shifts — and the estimate shifts with it.</li>
+      <li><b>The margin of error is part of the measurement.</b> The Bureau reports every estimate with a 90% margin of error. A rate of "43.2%" with a ±24.4 margin really means: <i>we are 90% confident the true rate is between 19% and 68%.</i> Ignoring the margin is how a sampling wobble gets mistaken for a real change.</li>
+      <li><b>Compare ranges, not points.</b> When two years' ranges overlap, the apparent change between their point estimates is not statistically meaningful. This tool shows the range for exactly that reason.</li>
+    </ol>
+
+    <div class="qa">
+      <p class="q">So was the Wilde Lake number wrong?</p>
+      <p>No. Both the 43% and the 10% are the Census Bureau's official estimates for their respective five-year windows. Both carry wide margins of error, and their ranges overlap — so the honest reading is that the true child-poverty rate in that tract has plausibly stayed in the same broad neighborhood the whole time. The headline number moved; the confidence interval tells you how much weight to put on that move.</p>
+    </div>
+
+    <div class="qa">
+      <p class="q">Why not just use the highest year, or smooth it ourselves?</p>
+      <p>Because the moment the state starts hand-picking which year or adjusting the Bureau's figures, the numbers stop being comparable across the other 1,400 tracts. Applying one published source uniformly is what keeps the map defensible. Where the margin of error matters for a program decision, the right move is to look at the range and the multi-year trend together — which is what this page is built to make easy.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><b>Source.</b> U.S. Census Bureau, American Community Survey 5-Year Estimates, child poverty (related children under 18 below poverty) by census tract, vintages 2022 / 2023 / 2024, as compiled by the Maryland Department of Planning. Tract names and community descriptions are GOC-maintained. Margins of error are the Census Bureau's published 90% values.</p>
+    <p><b>Reading the chart.</b> The dot is the published point estimate. The shaded bar is the margin of error — the band within which the true rate is 90% likely to fall. The green line marks the 30% threshold used in ENOUGH eligibility. A tract with data for a year but no bar had a margin too large for the Bureau to publish a reliable value.</p>
+    <p style="margin-top:22px; font-family:'IBM Plex Mono',monospace; font-size:12px">Governor's Office for Children · built for the Census-tract data discussion · share a tract with <code>?tract=GEOID</code></p>
+  </div>
+</footer>
+
+<script>
+const YEARS = ["2022","2023","2024"];
+let TRACTS={}, GEOM={}, STATS={};
+let curYear="2024", curMetric="est";
+let map, layer, byName=[];
+
+const AXMAX=70; // % scale max for range bars
+const fmtPct = v => (v==null? "—" : v.toFixed(1)+"%");
+const clampPct = v => Math.max(0, Math.min(AXMAX, v));
+
+// ---------- range-bar renderer (used by case study + breakdown) ----------
+function rangeRows(rec, dark){
+  let html="";
+  for(const y of YEARS){
+    const d=rec.years[y]||{};
+    const e=d.est, mo=d.moe;
+    let bar="";
+    if(e!=null && mo!=null){
+      const lo=clampPct(e-mo), hi=clampPct(e+mo);
+      const L=lo/AXMAX*100, W=(hi-lo)/AXMAX*100, P=clampPct(e)/AXMAX*100;
+      bar=`<div class="band-bar" style="left:${L}%; width:${W}%">
+              <span class="cap lo">${(e-mo<0?0:(e-mo)).toFixed(0)}</span>
+              <span class="cap hi">${(e+mo).toFixed(0)}</span>
+           </div>
+           <div class="pt" style="left:${P}%"><span class="lab">${e.toFixed(1)}%</span></div>`;
+    } else if(e!=null){
+      const P=clampPct(e)/AXMAX*100;
+      bar=`<div class="pt" style="left:${P}%"><span class="lab">${e.toFixed(1)}%</span></div>`;
+    } else {
+      bar=`<div style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:12px;opacity:.6;font-family:'IBM Plex Mono',monospace">no published estimate</div>`;
+    }
+    const thr=30/AXMAX*100;
+    html+=`<div class="rangerow">
+        <div class="yr">${y}<small>5-yr est.</small></div>
+        <div class="track">
+          <div class="axis"></div>
+          <div class="g1" style="left:${20/AXMAX*100}%"></div>
+          <div class="g1" style="left:${40/AXMAX*100}%"></div>
+          <div class="g1" style="left:${60/AXMAX*100}%"></div>
+          <div class="thr" style="left:${thr}%"></div>
+          ${bar}
+        </div>
+      </div>`;
+  }
+  return html;
+}
+function ticksHTML(){
+  let h=""; for(const t of [0,10,20,30,40,50,60,70]) h+=`<span style="left:${t/AXMAX*100}%">${t}%</span>`;
+  return h;
+}
+
+// ---------- case study ----------
+function renderCase(){
+  const rec=TRACTS["24027605403"];
+  document.getElementById("caseRows").innerHTML=rangeRows(rec,true);
+  document.getElementById("caseTicks").innerHTML=ticksHTML();
+  const a=rec.years["2022"], b=rec.years["2023"];
+  document.getElementById("caseTake").innerHTML=
+    `In <b>2022</b> the estimate was <b>${a.est}% (±${a.moe})</b> — a true-rate range of about <b>${(a.est-a.moe).toFixed(0)}%–${(a.est+a.moe).toFixed(0)}%</b>. `+
+    `In <b>2023</b> it was <b>${b.est}% (±${b.moe})</b>. Those two ranges overlap, so the 33-point "drop" in the headline number is, statistically, not a reliable change at all — it's the margin of error, not the neighborhood, moving.`;
+}
+
+// ---------- map ----------
+const RAMPS={
+  est:{title:"Child poverty rate", unit:"%", stops:[[0,'#f3ecdc'],[10,'#f0d9a8'],[20,'#e9b06a'],[30,'#d97b3f'],[45,'#b3402a'],[100,'#7d1f17']],
+       breaks:[[0,'< 10%'],[10,'10–20%'],[20,'20–30%'],[30,'30–45%'],[45,'≥ 45%']],
+       note:"Darker tracts have higher estimated child poverty. The 30% line is the ENOUGH eligibility threshold."},
+  moe:{title:"Margin of error", unit:" pts", stops:[[0,'#eef0ec'],[8,'#cfe0d6'],[14,'#9cc3b4'],[20,'#5d9a86'],[30,'#1f5c4d'],[100,'#0d3329']],
+       breaks:[[0,'< 8 pts'],[8,'8–14 pts'],[14,'14–20 pts'],[20,'20–30 pts'],[30,'≥ 30 pts']],
+       note:"Darker tracts have larger margins of error — their estimates are the least precise and the most likely to swing year to year."},
+  chg:{title:"Change vs. prior year", unit:" pts", diverging:true,
+       breaks:[[-99,'↓ fell > 10 pts'],[-10,'↓ 3–10 pts'],[-3,'≈ within ±3 pts'],[3,'↑ 3–10 pts'],[10,'↑ rose > 10 pts']],
+       note:"Blue tracts fell, red rose. Most year-to-year change is small — large swings usually sit on top of large margins of error."}
+};
+function colorFor(metric,v){
+  if(v==null) return '#ddd5c4';
+  if(metric==='chg'){
+    if(v<=-10) return '#1b4a63'; if(v<=-3) return '#5fa0bd'; if(v<3) return '#e7ddc9';
+    if(v<10) return '#d98a6f'; return '#9e2f1d';
+  }
+  const stops=RAMPS[metric].stops;
+  let c=stops[0][1];
+  for(const [t,col] of stops){ if(v>=t) c=col; }
+  return c;
+}
+function metricVal(rec){
+  if(curMetric==='est') return rec.years[curYear].est;
+  if(curMetric==='moe') return rec.years[curYear].moe;
+  const key = curYear==='2024' ? '2023_2024' : (curYear==='2023' ? '2022_2023' : null);
+  return key? rec.change[key] : null;
+}
+function styleFor(rec){
+  const v=metricVal(rec);
+  return {fillColor:colorFor(curMetric,v), fillOpacity:v==null?.25:.82, color:'#8a7c5f', weight:.4};
+}
+function ringsToLatLng(g){
+  const o=GEOM[g]; if(!o) return null;
+  const flip=r=>r.map(([x,y])=>[y,x]);
+  if(o.t==='P') return o.c.map(flip);
+  return o.c.map(poly=>poly.map(flip));
+}
+function buildMap(){
+  map=L.map('map',{zoomControl:true, attributionControl:false, minZoom:7, maxZoom:13}).setView([39.05,-77.0],8);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd'}).addTo(map);
+  layer=L.geoJSON(null);
+  const feats=[];
+  for(const g in GEOM){
+    const ll=ringsToLatLng(g); if(!ll) continue;
+    const rec=TRACTS[g]; if(!rec) continue;
+    const poly=L.polygon(ll,styleFor(rec));
+    poly._g=g;
+    poly.on('click',()=>selectTract(g,true));
+    poly.on('mouseover',function(){this.setStyle({weight:2,color:'#1a1714'})});
+    poly.on('mouseout',function(){this.setStyle({weight:.4,color:'#8a7c5f'})});
+    poly.bindPopup(()=>popupHTML(rec),{closeButton:false});
+    poly.addTo(map); feats.push(poly);
+  }
+  map._polys=feats;
+  map.fitBounds(L.featureGroup(feats).getBounds(),{padding:[10,10]});
+}
+function popupHTML(rec){
+  const v=metricVal(rec);
+  let label = curMetric==='est'?'Poverty rate':curMetric==='moe'?'Margin of error':'Change vs. prior yr';
+  let val = v==null?'—':(curMetric==='chg'?(v>0?'+':'')+v.toFixed(1)+' pts':fmtPct(v).replace('%',curMetric==='moe'?' pts':'%'));
+  return `<div class="pop-name">${rec.name}</div>
+          <div class="pop-geo">${rec.county} · ${rec.geoid}</div>
+          ${rec.desc?`<div style="margin:6px 0;font-style:italic">${rec.desc}</div>`:''}
+          <div style="margin-top:6px">${label} (${curYear}): <span class="pop-val">${val}</span></div>
+          <div style="margin-top:8px;font-size:12px;color:#1f5c4d;cursor:pointer" onclick="document.getElementById('explore').scrollIntoView({behavior:'smooth'});">▸ full breakdown below</div>`;
+}
+function restyleMap(){
+  if(!map||!map._polys) return;
+  for(const p of map._polys) p.setStyle(styleFor(TRACTS[p._g]));
+}
+function renderLegend(){
+  const R=RAMPS[curMetric];
+  document.getElementById('legTitle').textContent=R.title+" — "+curYear;
+  let h="";
+  for(const [t,lab] of R.breaks){
+    const col = curMetric==='chg'? colorFor('chg', t<=-99?-20:(t<-3?-5:(t<3?0:(t<10?5:20)))) : colorFor(curMetric,t);
+    h+=`<div class="row"><span class="sw" style="background:${col}"></span>${lab}</div>`;
+  }
+  h+=`<div class="row"><span class="sw" style="background:#ddd5c4"></span>No published estimate</div>`;
+  document.getElementById('legRows').innerHTML=h;
+  document.getElementById('legNote').textContent=R.note;
+}
+
+// ---------- distributions ----------
+function hist(div,vals,color,xtitle,binsize,range){
+  Plotly.newPlot(div,[{
+    x:vals,type:'histogram',marker:{color:color,line:{color:'#1a1714',width:.5}},
+    xbins:{size:binsize}, hovertemplate:'%{x}<br>%{y} tracts<extra></extra>'
+  }],{
+    margin:{l:38,r:12,t:6,b:40},
+    paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)',
+    font:{family:'IBM Plex Mono, monospace',size:11,color:'#4a443d'},
+    xaxis:{title:{text:xtitle,font:{size:11}},range:range,gridcolor:'#e3d8c2',zeroline:false},
+    yaxis:{gridcolor:'#e3d8c2',zeroline:false},
+    bargap:.02
+  },{displayModeBar:false,responsive:true});
+}
+function renderDist(){
+  const rate=[],moe=[],chg=[];
+  for(const g in TRACTS){
+    const r=TRACTS[g], y=r.years[curYear];
+    if(y.est!=null) rate.push(y.est);
+    if(y.moe!=null) moe.push(y.moe);
+    const k = curYear==='2024'?'2023_2024':(curYear==='2023'?'2022_2023':null);
+    if(k && r.change[k]!=null) chg.push(r.change[k]);
+  }
+  hist('distRate',rate,'#d97b3f','child poverty rate (%)',5,[0,100]);
+  hist('distMoe',moe,'#1f5c4d','margin of error (± pts)',3,[0,60]);
+  hist('distChg',chg,'#8a7c5f','change in estimate (pts)',4,[-50,50]);
+}
+function renderStatline(){
+  const s=STATS[curYear];
+  document.getElementById('statline').innerHTML=
+   `<div class="s"><div class="n">${s.median_est}%</div><div class="l">median tract child-poverty estimate (${curYear})</div></div>
+    <div class="s"><div class="n">±${s.median_moe}</div><div class="l">median margin of error — nearly as large as the estimate itself</div></div>
+    <div class="s"><div class="n">${s.over30}</div><div class="l">tracts with an estimate above the 30% threshold</div></div>`;
+}
+
+// ---------- search + breakdown ----------
+function buildIndex(){
+  byName=Object.values(TRACTS).map(r=>({
+    g:r.geoid, name:r.name, desc:r.desc, county:r.county,
+    hay:(r.name+" "+r.desc+" "+r.county+" "+r.geoid+" "+r.name.replace(/Census Tract /,'')).toLowerCase()
+  }));
+}
+let activeIdx=-1, curSuggest=[];
+function doSearch(q){
+  q=q.trim().toLowerCase();
+  const box=document.getElementById('suggest');
+  if(!q){box.classList.remove('open'); return;}
+  curSuggest=byName.filter(t=>t.hay.includes(q)).slice(0,12);
+  if(!curSuggest.length){box.classList.remove('open'); return;}
+  box.innerHTML=curSuggest.map((t,i)=>
+    `<div class="item${i===activeIdx?' active':''}" data-g="${t.g}">
+       <span><span class="nm">${t.name}</span> <span class="dsc">— ${t.desc||t.county}</span></span>
+       <span class="gid">${t.g}</span></div>`).join('');
+  box.classList.add('open');
+  box.querySelectorAll('.item').forEach(el=>el.onclick=()=>{selectTract(el.dataset.g,false);});
+}
+function selectTract(g,scroll){
+  const rec=TRACTS[g]; if(!rec) return;
+  document.getElementById('suggest').classList.remove('open');
+  document.getElementById('search').value=rec.name+(rec.desc?` — ${rec.desc}`:'');
+  renderBreakdown(rec);
+  const url=new URL(location); url.searchParams.set('tract',g); history.replaceState(null,'',url);
+  if(scroll) document.getElementById('explore').scrollIntoView({behavior:'smooth'});
+}
+function trend(rec){
+  const e22=rec.years['2022'].est, e24=rec.years['2024'].est;
+  const m24=rec.years['2024'].moe, m22=rec.years['2022'].moe;
+  if(e24==null) return "This tract has no published 2024 estimate — its margin of error was too large for the Census Bureau to report a reliable value.";
+  let parts=[];
+  if(e22!=null && m22!=null && m24!=null){
+    const lo24=e24-m24, hi24=e24+m24, lo22=e22-m22, hi22=e22+m22;
+    const overlap = lo24<=hi22 && lo22<=hi24;
+    if(overlap) parts.push(`The 2022 and 2024 ranges <b>overlap</b>, so the difference between the two point estimates is <b>not statistically meaningful</b> — the apparent change is within the margin of error.`);
+    else parts.push(`The 2022 and 2024 ranges <b>do not overlap</b>, so this looks like a <b>real</b> change rather than sampling noise.`);
+  }
+  if(m24!=null){
+    const ratio=m24/Math.max(e24,0.1);
+    if(ratio>=1) parts.push(`Its 2024 margin of error (±${m24}) is <b>larger than the estimate itself</b> — read this tract's rate as a wide range, not a precise figure.`);
+    else if(ratio>=0.5) parts.push(`Its 2024 margin of error (±${m24}) is sizable relative to the estimate, so treat the rate as approximate.`);
+    else parts.push(`Its 2024 margin of error (±${m24}) is relatively tight, so the estimate is comparatively precise.`);
+  }
+  return parts.join(' ');
+}
+function renderBreakdown(rec){
+  const y24=rec.years['2024'], y22=rec.years['2022'];
+  const chg = (y22.est!=null&&y24.est!=null)? (y24.est-y22.est) : null;
+  const el=document.getElementById('breakdown');
+  el.innerHTML=`<div class="bd bd-light">
+    <div class="hd">
+      <div>
+        <h3>${rec.name}</h3>
+        <div class="meta">${rec.county} · GEOID ${rec.geoid}</div>
+        ${rec.desc?`<div class="desc">${rec.desc}</div>`:''}
+      </div>
+      <button class="share" id="shareBtn">⧉ Copy share link</button>
+    </div>
+    <div class="body">
+      ${rangeRows(rec,false)}
+      <div class="scale"><div></div><div class="ticks">${ticksHTML()}</div></div>
+      <div class="summary">
+        <div class="cell"><div class="k">2024 estimate</div><div class="v">${y24.est==null?'—':y24.est+'<small>%</small>'}</div></div>
+        <div class="cell"><div class="k">2024 margin of error</div><div class="v">${y24.moe==null?'—':'±'+y24.moe}</div></div>
+        <div class="cell"><div class="k">Change since 2022</div><div class="v">${chg==null?'—':(chg>0?'+':'')+chg.toFixed(1)+'<small> pts</small>'}</div></div>
+      </div>
+    </div>
+    <div class="interp">${trend(rec)}</div>
+  </div>`;
+  document.getElementById('shareBtn').onclick=function(){
+    const url=new URL(location); url.searchParams.set('tract',rec.geoid);
+    navigator.clipboard.writeText(url.toString());
+    this.textContent='✓ Link copied'; setTimeout(()=>this.textContent='⧉ Copy share link',1600);
+  };
+}
+
+// ---------- wiring ----------
+function wireSeg(id,attr,cb){
+  document.getElementById(id).addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    [...e.currentTarget.children].forEach(x=>x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true'); cb(b.dataset[attr]);
+  });
+}
+function init(){
+  renderCase();
+  buildMap(); renderLegend();
+  renderDist(); renderStatline();
+  buildIndex();
+
+  wireSeg('yearSeg','year',v=>{curYear=v; restyleMap(); renderLegend(); renderDist(); renderStatline();});
+  wireSeg('metricSeg','metric',v=>{curMetric=v; restyleMap(); renderLegend();});
+
+  const s=document.getElementById('search');
+  s.addEventListener('input',()=>{activeIdx=-1; doSearch(s.value);});
+  s.addEventListener('keydown',e=>{
+    const box=document.getElementById('suggest');
+    if(!box.classList.contains('open')) return;
+    if(e.key==='ArrowDown'){activeIdx=Math.min(activeIdx+1,curSuggest.length-1); doSearch(s.value); e.preventDefault();}
+    else if(e.key==='ArrowUp'){activeIdx=Math.max(activeIdx-1,0); doSearch(s.value); e.preventDefault();}
+    else if(e.key==='Enter'&&curSuggest[activeIdx]) selectTract(curSuggest[activeIdx].g,false);
+    else if(e.key==='Escape') box.classList.remove('open');
+  });
+  document.addEventListener('click',e=>{ if(!e.target.closest('.search-box')) document.getElementById('suggest').classList.remove('open'); });
+
+  const t=new URL(location).searchParams.get('tract');
+  if(t&&TRACTS[t]) selectTract(t,true);
+}
+
+Promise.all([
+  fetch('data/tracts.json').then(r=>r.json()),
+  fetch('data/geometry.json').then(r=>r.json()),
+  fetch('data/stats.json').then(r=>r.json())
+]).then(([t,g,s])=>{TRACTS=t;GEOM=g;STATS=s; init();})
+ .catch(e=>{document.getElementById('caseRows').innerHTML='<p style="color:#e8c9a0">Data failed to load: '+e+'</p>';});
+</script>
+</body>
+</html>
