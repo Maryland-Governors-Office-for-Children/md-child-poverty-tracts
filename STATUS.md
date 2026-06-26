@@ -12,6 +12,15 @@ See `CLAUDE.md` for context and `README.md` for build/run steps.
   per-year distributions, tract search, shareable `?tract=GEOID` URLs, methodology
   narrative answering the Eisenreich thread.
 - Playwright-tested: 1,463 map polygons, toggles, search, deep-link, no console errors.
+- **Generalized** title → "Maryland Census Tract Child Poverty Rate Overview"; removed
+  the "Data & Information" kicker and the request-specific framing (Wilde Lake kept as an
+  illustrative example, not "a colleague flagged…").
+- **County dropdown** snap-zooms the map to a county (flyToBounds) and dims out-of-county
+  tracts; syncs when a tract is searched.
+- **LLM-council visual pass** applied: inline range-bar key (dot=estimate / hatched
+  band=margin of error / green=30% line), 30% threshold explained inline, hatched band
+  reads as uncertainty, "%"+contrast on dark labels, above-30% band shading, legend
+  threshold marker, mobile stacking.
 
 ## Live
 - **Site:** https://maryland-governors-office-for-children.github.io/md-child-poverty-tracts/
