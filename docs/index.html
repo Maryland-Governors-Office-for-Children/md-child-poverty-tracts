@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reading the Margin · Maryland Census-Tract Child Poverty</title>
+<title>Maryland Census Tract Child Poverty Rate Overview</title>
 <meta name="description" content="How Maryland measures child poverty at the census-tract level — estimates, margins of error, and why a single tract's rate can swing wildly year to year.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,14 +67,27 @@ p{max-width:66ch}
 .thr{position:absolute; top:-6px; bottom:-6px; width:2px; background:var(--accent)}
 .rangerow:first-child .thr::after{content:"30% threshold"; position:absolute; top:-20px; left:6px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:#7fae9f; white-space:nowrap; letter-spacing:.04em}
 .bd-light .rangerow:first-child .thr::after{color:var(--accent)}
-.band-bar{position:absolute; top:50%; transform:translateY(-50%); height:18px; background:linear-gradient(90deg,rgba(232,201,160,.25),rgba(232,201,160,.5)); border:1px solid var(--band-edge); border-radius:3px}
-.band-bar .cap{position:absolute; top:-19px; font-family:"IBM Plex Mono",monospace; font-size:10px; color:#cdbfa6; white-space:nowrap}
+.band-bar{position:absolute; top:50%; transform:translateY(-50%); height:18px; background:repeating-linear-gradient(45deg,rgba(232,201,160,.16),rgba(232,201,160,.16) 5px,rgba(232,201,160,.34) 5px,rgba(232,201,160,.34) 10px); border:1px solid var(--band-edge); border-radius:3px}
+.band-bar.over::before{content:""; position:absolute; top:-1px; bottom:-1px; right:-1px; background:rgba(179,64,42,.22); border-radius:0 3px 3px 0}
+.band-bar .cap{position:absolute; top:-18px; font-family:"IBM Plex Mono",monospace; font-size:10px; color:#e4d7bd; white-space:nowrap}
 .band-bar .cap.lo{left:0; transform:translateX(-50%)}
 .band-bar .cap.hi{right:0; transform:translateX(50%)}
+/* inline key decoding dot vs band */
+.rb-key{display:flex; gap:26px; flex-wrap:wrap; align-items:center; margin:2px 0 22px; font-family:"IBM Plex Mono",monospace; font-size:12px; color:#cdbfa6}
+.rb-key .k{display:flex; gap:9px; align-items:center}
+.rb-key .swdot{width:13px; height:13px; border-radius:50%; background:var(--est); box-shadow:0 0 0 2px var(--ink),0 0 0 3px var(--est); flex:none}
+.rb-key .swband{width:46px; height:16px; border-radius:3px; border:1px solid var(--band-edge); background:repeating-linear-gradient(45deg,rgba(232,201,160,.16),rgba(232,201,160,.16) 5px,rgba(232,201,160,.34) 5px,rgba(232,201,160,.34) 10px); flex:none}
+.rb-key .swthr{width:2px; height:16px; background:var(--accent); flex:none}
+.rb-key b{color:#f2e9d6; font-family:"IBM Plex Sans",sans-serif}
+.bd-light .rb-key{color:var(--ink-soft)}
+.bd-light .rb-key .swdot{box-shadow:0 0 0 2px var(--paper),0 0 0 3px var(--est)}
+.bd-light .rb-key .swband{background:repeating-linear-gradient(45deg,rgba(207,159,99,.14),rgba(207,159,99,.14) 5px,rgba(207,159,99,.32) 5px,rgba(207,159,99,.32) 10px)}
+.bd-light .rb-key b{color:var(--ink)}
 .pt{position:absolute; top:50%; width:13px; height:13px; border-radius:50%; background:var(--est); transform:translate(-50%,-50%); box-shadow:0 0 0 3px var(--ink), 0 0 0 4px var(--est)}
 .pt .lab{position:absolute; bottom:16px; left:50%; transform:translateX(-50%); font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:13px; color:var(--paper); white-space:nowrap}
 .scale{display:grid; grid-template-columns:64px 1fr; gap:18px; margin-top:8px}
-.scale .ticks{position:relative; height:16px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:#9f9683}
+.scale .ticks{position:relative; height:16px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:#c6b48f}
+.bd-light .scale .ticks{color:var(--ink-soft)}
 .scale .ticks span{position:absolute; transform:translateX(-50%)}
 .takeaway{margin-top:26px; padding:18px 20px; border-left:3px solid var(--band-edge); background:rgba(232,201,160,.08); font-size:15.5px; line-height:1.6; border-radius:0 4px 4px 0}
 .takeaway b{color:var(--band)}
@@ -87,6 +100,8 @@ p{max-width:66ch}
 .seg button:last-child{border-right:0}
 .seg button:hover{background:var(--paper-2)}
 .seg button[aria-pressed="true"]{background:var(--ink); color:var(--paper)}
+.county-sel{font-family:"IBM Plex Mono",monospace; font-size:13.5px; font-weight:500; color:var(--ink); background:var(--paper); border:1.5px solid var(--ink); border-radius:4px; padding:8px 32px 8px 13px; cursor:pointer; -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%231a1714' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center}
+.county-sel:focus{outline:2px solid var(--accent); outline-offset:1px}
 
 /* ---- map ---- */
 #map{height:560px; border:1.5px solid var(--ink); border-radius:6px; box-shadow:var(--shadow); background:#e9e2d3}
@@ -170,15 +185,23 @@ footer code{font-family:"IBM Plex Mono",monospace; background:var(--paper-2); pa
   .maprow{grid-template-columns:1fr} .charts{grid-template-columns:1fr}
   .bd .summary{grid-template-columns:1fr; } .bd .summary .cell{border-right:0; border-bottom:1px solid var(--line)}
 }
+@media(max-width:640px){
+  body{font-size:16px}
+  .rangerow{grid-template-columns:46px 1fr; gap:10px}
+  .scale{grid-template-columns:46px 1fr; gap:10px}
+  .scale .ticks span:nth-child(even){display:none}   /* show 0/20/40/60 only */
+  .rb-key{flex-direction:column; gap:8px; align-items:flex-start}
+  .case{padding:22px 18px 28px} .bd .hd,.bd .body,.bd .interp{padding-left:18px; padding-right:18px}
+  #map{height:440px}
+}
 </style>
 </head>
 <body>
 
 <header class="mast">
   <div class="wrap">
-    <p class="kicker">Maryland Governor's Office for Children · Data &amp; Information</p>
-    <h1>Reading the Margin</h1>
-    <p class="dek">How Maryland measures child poverty one census tract at a time — and why a single tract's rate can lurch from 43% to 10% in a year without anyone's life actually changing.</p>
+    <h1>Maryland Census Tract Child Poverty Rate Overview</h1>
+    <p class="dek">How child poverty is measured one census tract at a time — the estimates, the margins of error around them, and why a single tract's rate can swing widely from one year to the next without the neighborhood actually changing.</p>
     <div class="byline">
       <span class="tag">Explainer</span>
       <span>American Community Survey · 5-Year Estimates</span>
@@ -191,15 +214,20 @@ footer code{font-family:"IBM Plex Mono",monospace; background:var(--paper-2); pa
 <section id="question">
   <div class="wrap narrow">
     <p class="sec-no">01 — The question</p>
-    <h2>A tract that "dropped" 33 points</h2>
-    <p class="lead">A Howard County colleague flagged what looked like an obvious error: Census Tract&nbsp;6054.03 in the Wilde Lake community had hovered near 40% child poverty for years, then suddenly read 10%. How can five-year data move that much in one year?</p>
-    <p class="drop">It isn't an error — and it isn't really a 33-point drop. It's the margin of error doing exactly what margins of error do in small places. Every tract-level poverty figure Maryland publishes is an <em>estimate</em> built from a survey sample, and at the tract level those samples are tiny. The single number on the map is just the middle of a range — and for Wilde Lake, that range was enormous. Here is what the Census Bureau actually reported.</p>
+    <h2>When a tract appears to "drop" 33 points</h2>
+    <p class="lead">It is common to see a tract that hovered near 40% child poverty for years suddenly read 10% — and to assume the data is broken. Census Tract&nbsp;6054.03 (the Wilde Lake community in Columbia) is a textbook case. How can a five-year estimate move that much in a single year?</p>
+    <p class="drop">It usually isn't an error — and it usually isn't really a 33-point drop. It's the margin of error doing exactly what margins of error do in small places. Every tract-level poverty figure published for Maryland is an <em>estimate</em> built from a survey sample, and at the tract level those samples are tiny. The single number on the map is just the middle of a range — and for tracts like this one, that range is enormous. Here is what the Census Bureau actually reported.</p>
   </div>
 
   <div class="wrap">
     <div class="case" id="caseFig">
       <h3>Census Tract 6054.03 — Wilde Lake, Howard County</h3>
       <p class="sub">ACS 5-year child-poverty estimate ± margin of error (90% confidence)</p>
+      <div class="rb-key">
+        <span class="k"><span class="swdot"></span><b>Estimate</b> — the published rate</span>
+        <span class="k"><span class="swband"></span><b>Margin of error</b> — true rate is 90% likely to fall in this band</span>
+        <span class="k"><span class="swthr"></span><b>30% line</b> — ENOUGH eligibility threshold</span>
+      </div>
       <!-- range rows injected by JS -->
       <div id="caseRows"></div>
       <div class="scale"><div></div><div class="ticks" id="caseTicks"></div></div>
@@ -209,6 +237,7 @@ footer code{font-family:"IBM Plex Mono",monospace; background:var(--paper-2); pa
 
   <div class="wrap narrow">
     <p>Notice that the 2022 range (roughly <b>19%–68%</b>) and the 2023 range (<b>0%–23%</b>) almost touch. Statistically, the "drop" is barely distinguishable from no change at all — both years are consistent with the true rate sitting somewhere around 20%. The point estimate jumped because the survey happened to catch different households; the underlying neighborhood did not transform overnight.</p>
+    <p style="font-size:15.5px"><b>About the green line.</b> Throughout this page, the <span style="color:var(--accent);font-weight:600">30% line</span> marks Maryland's <b>ENOUGH eligibility threshold</b> — a tract must reach roughly 30% child poverty to qualify. That's why margins of error matter so much here: when a tract's <em>range</em> straddles 30% (as Wilde Lake's 2022 range did), a single noisy estimate can flip it on or off the map even though nothing real changed.</p>
   </div>
 </section>
 
@@ -235,6 +264,10 @@ footer code{font-family:"IBM Plex Mono",monospace; background:var(--paper-2); pa
           <button data-metric="moe" aria-pressed="false">Margin of error</button>
           <button data-metric="chg" aria-pressed="false">Year-over-year change</button>
         </div>
+      </div>
+      <div class="ctl">
+        <label>Zoom to county</label>
+        <select id="countySel" class="county-sel"><option value="">All Maryland</option></select>
       </div>
     </div>
 
@@ -295,8 +328,8 @@ footer code{font-family:"IBM Plex Mono",monospace; background:var(--paper-2); pa
     </ol>
 
     <div class="qa">
-      <p class="q">So was the Wilde Lake number wrong?</p>
-      <p>No. Both the 43% and the 10% are the Census Bureau's official estimates for their respective five-year windows. Both carry wide margins of error, and their ranges overlap — so the honest reading is that the true child-poverty rate in that tract has plausibly stayed in the same broad neighborhood the whole time. The headline number moved; the confidence interval tells you how much weight to put on that move.</p>
+      <p class="q">So when a tract's number swings, is one of the years wrong?</p>
+      <p>Usually neither. Each year's figure is the Census Bureau's official estimate for that five-year window. When both years carry wide margins of error and their ranges overlap, the honest reading is that the true child-poverty rate has plausibly stayed in the same broad range the whole time. The headline number moved; the confidence interval tells you how much weight to put on that move. (For the Wilde Lake tract above, the 43% and the 10% are both official — and their ranges overlap.)</p>
     </div>
 
     <div class="qa">
@@ -310,15 +343,15 @@ footer code{font-family:"IBM Plex Mono",monospace; background:var(--paper-2); pa
   <div class="wrap">
     <p><b>Source.</b> U.S. Census Bureau, American Community Survey 5-Year Estimates, child poverty (related children under 18 below poverty) by census tract, vintages 2022 / 2023 / 2024, as compiled by the Maryland Department of Planning. Tract names and community descriptions are GOC-maintained. Margins of error are the Census Bureau's published 90% values.</p>
     <p><b>Reading the chart.</b> The dot is the published point estimate. The shaded bar is the margin of error — the band within which the true rate is 90% likely to fall. The green line marks the 30% threshold used in ENOUGH eligibility. A tract with data for a year but no bar had a margin too large for the Bureau to publish a reliable value.</p>
-    <p style="margin-top:22px; font-family:'IBM Plex Mono',monospace; font-size:12px">Governor's Office for Children · built for the Census-tract data discussion · share a tract with <code>?tract=GEOID</code></p>
+    <p style="margin-top:22px; font-family:'IBM Plex Mono',monospace; font-size:12px">Maryland Governor's Office for Children · share a specific tract with <code>?tract=GEOID</code></p>
   </div>
 </footer>
 
 <script>
 const YEARS = ["2022","2023","2024"];
 let TRACTS={}, GEOM={}, STATS={};
-let curYear="2024", curMetric="est";
-let map, layer, byName=[];
+let curYear="2024", curMetric="est", curCounty="";
+let map, layer, byName=[], countyBounds={}, stateBounds=null;
 
 const AXMAX=70; // % scale max for range bars
 const fmtPct = v => (v==null? "—" : v.toFixed(1)+"%");
@@ -334,9 +367,10 @@ function rangeRows(rec, dark){
     if(e!=null && mo!=null){
       const lo=clampPct(e-mo), hi=clampPct(e+mo);
       const L=lo/AXMAX*100, W=(hi-lo)/AXMAX*100, P=clampPct(e)/AXMAX*100;
-      bar=`<div class="band-bar" style="left:${L}%; width:${W}%">
-              <span class="cap lo">${(e-mo<0?0:(e-mo)).toFixed(0)}</span>
-              <span class="cap hi">${(e+mo).toFixed(0)}</span>
+      const over = (e+mo)>30 ? " over" : "";   // band reaches past the 30% line
+      bar=`<div class="band-bar${over}" style="left:${L}%; width:${W}%">
+              <span class="cap lo">${(e-mo<0?0:(e-mo)).toFixed(0)}%</span>
+              <span class="cap hi">${(e+mo).toFixed(0)}%</span>
            </div>
            <div class="pt" style="left:${P}%"><span class="lab">${e.toFixed(1)}%</span></div>`;
     } else if(e!=null){
@@ -407,7 +441,9 @@ function metricVal(rec){
 }
 function styleFor(rec){
   const v=metricVal(rec);
-  return {fillColor:colorFor(curMetric,v), fillOpacity:v==null?.25:.82, color:'#8a7c5f', weight:.4};
+  const dim = curCounty && rec.county!==curCounty;   // fade tracts outside the chosen county
+  return {fillColor:colorFor(curMetric,v), fillOpacity:dim?.12:(v==null?.25:.82),
+          color:'#8a7c5f', weight:dim?.2:.4, opacity:dim?.3:1};
 }
 function ringsToLatLng(g){
   const o=GEOM[g]; if(!o) return null;
@@ -432,7 +468,28 @@ function buildMap(){
     poly.addTo(map); feats.push(poly);
   }
   map._polys=feats;
-  map.fitBounds(L.featureGroup(feats).getBounds(),{padding:[10,10]});
+  // per-county bounds for snap-zoom + full-state bounds
+  countyBounds={}; const seen={};
+  for(const p of feats){
+    const c=TRACTS[p._g].county; if(!c) continue;
+    if(!countyBounds[c]) countyBounds[c]=L.latLngBounds(p.getBounds());
+    else countyBounds[c].extend(p.getBounds());
+    seen[c]=1;
+  }
+  stateBounds=L.featureGroup(feats).getBounds();
+  map.fitBounds(stateBounds,{padding:[10,10]});
+  // populate dropdown
+  const sel=document.getElementById('countySel');
+  Object.keys(seen).sort().forEach(c=>{
+    const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o);
+  });
+  sel.addEventListener('change',()=>{ zoomCounty(sel.value); });
+}
+function zoomCounty(c){
+  curCounty=c;
+  restyleMap();
+  if(c && countyBounds[c]) map.flyToBounds(countyBounds[c],{padding:[24,24],duration:.7,maxZoom:12});
+  else if(stateBounds) map.flyToBounds(stateBounds,{padding:[10,10],duration:.7});
 }
 function popupHTML(rec){
   const v=metricVal(rec);
@@ -454,7 +511,11 @@ function renderLegend(){
   let h="";
   for(const [t,lab] of R.breaks){
     const col = curMetric==='chg'? colorFor('chg', t<=-99?-20:(t<-3?-5:(t<3?0:(t<10?5:20)))) : colorFor(curMetric,t);
-    h+=`<div class="row"><span class="sw" style="background:${col}"></span>${lab}</div>`;
+    const elig = (curMetric==='est' && t===30) ? ' style="font-weight:600"' : '';
+    h+=`<div class="row"${elig}><span class="sw" style="background:${col}"></span>${lab}</div>`;
+    if(curMetric==='est' && t===20){
+      h+=`<div class="row" style="margin:2px 0 4px;color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.04em"><span class="sw" style="background:transparent;border:0;border-top:2px solid var(--accent);height:0"></span>↑ ENOUGH 30% eligibility threshold</div>`;
+    }
   }
   h+=`<div class="row"><span class="sw" style="background:#ddd5c4"></span>No published estimate</div>`;
   document.getElementById('legRows').innerHTML=h;
@@ -521,6 +582,9 @@ function selectTract(g,scroll){
   const rec=TRACTS[g]; if(!rec) return;
   document.getElementById('suggest').classList.remove('open');
   document.getElementById('search').value=rec.name+(rec.desc?` — ${rec.desc}`:'');
+  // sync the county dropdown + map focus to this tract's county
+  const sel=document.getElementById('countySel');
+  if(sel && rec.county && sel.value!==rec.county){ sel.value=rec.county; zoomCounty(rec.county); }
   renderBreakdown(rec);
   const url=new URL(location); url.searchParams.set('tract',g); history.replaceState(null,'',url);
   if(scroll) document.getElementById('explore').scrollIntoView({behavior:'smooth'});
@@ -558,6 +622,11 @@ function renderBreakdown(rec){
       <button class="share" id="shareBtn">⧉ Copy share link</button>
     </div>
     <div class="body">
+      <div class="rb-key">
+        <span class="k"><span class="swdot"></span><b>Estimate</b></span>
+        <span class="k"><span class="swband"></span><b>Margin of error</b> — true rate 90% likely inside</span>
+        <span class="k"><span class="swthr"></span><b>30% threshold</b></span>
+      </div>
       ${rangeRows(rec,false)}
       <div class="scale"><div></div><div class="ticks">${ticksHTML()}</div></div>
       <div class="summary">
