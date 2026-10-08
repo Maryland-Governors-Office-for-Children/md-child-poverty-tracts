@@ -4,6 +4,13 @@ _Last reviewed: 2026-10-08._ Living index of what's done, open, and needs a deci
 See `CLAUDE.md` for context and `README.md` for build/run steps.
 
 ## Done
+
+- **Census memo review bookkeeping (2026-10-08):**
+  - Added `memo-review/` to `.gitignore` so the internal, pre-decisional memo drafts stay local and can't be committed.
+  - Rewrote `STATUS.md` to record the memo review (working files, tooling, new margin-of-error and sample-size analysis) and the live site/repo details. Also added the memo follow-ups and the optional per-vintage margin-of-error table to the Open list.
+  - Added `.claude/status-mark`, pointing at commit `d1b61cd` as the last commit covered by STATUS.md.
+  - Open: memo follow-ups still need Nick: send or revise the drafted reply, and resolve the routing and content questions before signature.
+
 - Scaffolded standalone repo `~/projects/md-child-poverty-tracts/`, copied only the
   select inputs needed (3 ACS-year tract CSVs, tract names, tract geometry).
 - `build.py` → `docs/data/{tracts,geometry,stats}.json` (1,463 tracts; geometry
